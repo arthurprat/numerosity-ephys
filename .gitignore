@@ -1,2 +1,7 @@
 env/
 .DS_Store
+
+experiment/logs/*
+
+*.pyc
+__pycache__/

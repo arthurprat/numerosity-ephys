@@ -1,0 +1,19 @@
+intro_block:
+  "NOTE: The number of dots will be between\n\n {range_low} and {range_high}"
+
+intro_part1: 
+  "Part 1.\n\n
+  You will see {n_examples} examples of clouds of dots,\n
+  together with the number of dots that they contain."
+
+intro_part2:
+  "Part 2.\n\n
+  Report the number of dots using the slider.\n\n
+  You will receive feedback on the actual number of dots.\n\n
+  NOTE: Your accuracy will influence your monetary bonus!"
+
+intro_part3:
+  "Part 3.\n\n
+  You will receive NO feedback anymore.\n\n
+  NOTE: your accuracy influences your monetary bonus!\n\n
+  This is run {run}/8."
