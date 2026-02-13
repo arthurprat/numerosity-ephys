@@ -42,10 +42,10 @@ Go to the experiment repo:
 cd experiment
 ```
 
-<!-- Run the experiment for subject 01, session 1, with the narrow range, outside the scanner:
+Run the experiment for subject 01, session 1, with the narrow range:
 
 ```
-python run_noscanner_onerange.py 01 1 narrow
+python run_onerange.py 01 1 narrow
 ```
 
 It might take a minute to start, the first time you run it.
@@ -53,5 +53,5 @@ It might take a minute to start, the first time you run it.
 A note about __important settings__:
 - The number of trials in each of the three parts ('examples', with-feedback, without-feedback) is set in the settings yml file in `settings/`
 (look for `example: n_examples`, `feedback: n_examples`, `task: n_trials`).
-- The sizes of elements on screen (including slider size) depend on the specified screen width and distance of viewer. You can specify those in `monitor: width` and `monitor: distance`. -->
+- The sizes of elements on screen (including slider size) depend on the specified screen width and distance of viewer. You can specify those in `monitor: width` and `monitor: distance`.
 
