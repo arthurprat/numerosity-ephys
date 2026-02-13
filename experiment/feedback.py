@@ -43,6 +43,9 @@ class FeedbackTrial(Trial):
 
         if self.session.win.mouseVisible:
             self.session.win.mouseVisible = False
+        
+        if self.session.sendPulses:
+            self.session.labjack_pulse()
 
         response_slider = self.session.response_slider
 

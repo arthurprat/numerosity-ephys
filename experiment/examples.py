@@ -26,6 +26,10 @@ class ExampleTrial(Trial):
         self.n_text_stimulus = TextStim(self.session.win, text=n, pos=text_pos, color=(-1, 1, -1))
 
     def draw(self):
+
+        if self.session.sendPulses:
+            self.session.labjack_pulse()
+        
         #self.session.mouse.clickReset()
         self.session.fixation_lines.draw()
         self.stimulus_array.draw()

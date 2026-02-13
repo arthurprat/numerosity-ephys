@@ -51,6 +51,9 @@ class InstructionTrial(Trial):
 
         if self.session.win.mouseVisible:
             self.session.win.mouseVisible = False
+        
+        if self.session.sendPulses:
+            self.session.labjack_pulse()
 
         self.session.fixation_lines.draw(draw_fixation_cross=False)
         self.text.draw()

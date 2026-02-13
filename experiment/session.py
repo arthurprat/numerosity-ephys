@@ -3,16 +3,45 @@ from psychopy import event
 from stimuli import ResponseSlider, FixationLines
 import yaml
 import os.path as op
+import numpy as np
+
+import time
 
 class EstimationSession(PylinkEyetrackerSession):
-    def __init__(self, output_str, range, subject=None, output_dir=None, settings_file=None, run=None, eyetracker_on=False, calibrate_eyetracker=False):
+    def __init__(self, output_str, range, subject=None, output_dir=None, settings_file=None, run=None, eyetracker_on=False,
+                 calibrate_eyetracker=False, sendPulses=False):
 
         super().__init__(output_str, output_dir=output_dir, settings_file=settings_file, eyetracker_on=eyetracker_on)
 
         # self.win.color = (-.25, -.25, -.25)
 
         self.show_eyetracker_calibration = calibrate_eyetracker
+        self.sendPulses = sendPulses
+        if self.sendPulses:
 
+            self.eeglog_path = op.join(self.output_dir, self.output_str + ".eeglog")
+            self.eeglog = open(self.eeglog_path, "a")
+            timestamp = round(time.time()*1000)
+            toPrint = str(timestamp)+'\t0\t'+'log starts\n'
+            self.eeglog.write(toPrint)
+
+            import u3
+            try:
+                self.labjack = u3.U3() # Initialize LabJack
+                print("Labjack connected")
+            except:
+                print("!!THE SYNC BOX IS NOT PLUGGED IN!! Connect the cable and restart the task.")
+                ###exit()
+                class FakeLabjack:
+                    def setFIOState(self, channel, state):
+                        if state == 1:
+                            print(f'FakeLabjack: setFIOState called with channel {channel}, state {state}')
+                    def close(self):
+                        print('FakeLabjack: close.')
+                self.labjack = FakeLabjack()
+            self.labjack_timeDelay = np.random.uniform(0.8,1.2)
+            self.labjack_startTime = time.time()
+            print(self.labjack_startTime)
         self.mouse = event.Mouse(visible=False)
 
         self.instructions = yaml.safe_load(open(op.join(op.dirname(__file__), 'instruction_texts.yml'), 'r'))
@@ -28,7 +57,24 @@ class EstimationSession(PylinkEyetrackerSession):
                                             **self.settings['fixation_lines'])
 
         self._setup_response_slider()
-
+    
+    ######## PULSE ########
+    ######## Inspired by 'Zaghloul Lab Synchronization Code' #######
+    def labjack_pulse(self):
+        if not self.sendPulses:
+            return
+        currentTime = time.time()
+        if currentTime > self.labjack_startTime+self.labjack_timeDelay:
+            self.labjack.setFIOState(0,1)
+            timestamp = round(time.time()*1000) #Check timezone
+            toPrint = str(timestamp)+'\t1\t'+'CHANNEL_0_UP\n'
+            self.eeglog.write(toPrint)
+            time.sleep(0.01)
+            self.labjack_startTime = currentTime
+            self.labjack_timeDelay = np.random.uniform(0.8,1.2)
+        else:
+            self.labjack.setFIOState(0,0)
+    
     def _setup_response_slider(self):
 
         position_slider = (0, 0)
@@ -59,5 +105,12 @@ class EstimationSession(PylinkEyetrackerSession):
             self.start_recording_eyetracker()
         for trial in self.trials:
             trial.run()
+        
+        if self.sendPulses:
+            self.labjack.close()
+            timestamp = round(time.time()*1000)
+            toPrint = str(timestamp)+'\t0\t'+'log stops\n'
+            self.eeglog.write(toPrint)
+            self.eeglog.close()
 
         self.close()

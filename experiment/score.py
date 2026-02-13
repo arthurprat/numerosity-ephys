@@ -105,6 +105,9 @@ class ScoreTrial(InstructionTrial):
 
     def draw(self):
 
+        if self.session.sendPulses:
+            self.session.labjack_pulse()
+
         if self.phase == 0:
             self.get_score()
             self.stop_phase()

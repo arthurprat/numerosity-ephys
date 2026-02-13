@@ -112,6 +112,9 @@ class TaskTrial(Trial):
 
         if self.session.win.mouseVisible:
             self.session.win.mouseVisible = False
+        
+        if self.session.sendPulses:
+            self.session.labjack_pulse()
 
         if (self.phase == self.feedback_phase) & (not hasattr(self, 'response_onset')):
             self.session.fixation_lines.draw(draw_fixation_cross=False)

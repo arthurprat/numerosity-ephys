@@ -84,7 +84,7 @@ class OneRangeSession(EstimationSession):
 
 
 
-def main(subject, session, range, settings, run_examples=True, run_feedback=True):
+def main(subject, session, range, settings, pulse, run_examples=True, run_feedback=True):
 
     settings_fn, use_eyetracker = get_settings(settings)
 
@@ -95,7 +95,7 @@ def main(subject, session, range, settings, run_examples=True, run_feedback=True
 
     one_range_session = OneRangeSession(output_str=output_str, subject=subject,
                          output_dir=output_dir, settings_file=settings_fn, 
-                         run=_RUN, range=range, eyetracker_on=use_eyetracker)
+                         run=_RUN, range=range, eyetracker_on=use_eyetracker, sendPulses=pulse)
     
     one_range_session.create_trials(session=session)
 
@@ -113,10 +113,12 @@ if __name__ == "__main__":
     argparser.add_argument('session', type=str, help='Session')
     #argparser.add_argument('start_run', type=int, help='Start run #')
     argparser.add_argument('range', choices=['narrow', 'wide'], help='Range (narrow or wide)')
-    argparser.add_argument('--settings', type=str, help='Settings label', default='noscanner')
+    argparser.add_argument('--pulse', action=argparse.BooleanOptionalAction, default=True, help='Use pulse (default: True)')
+    argparser.add_argument('--settings', type=str, help='Settings label', default='default_ephys')
     #argparser.add_argument('--n_runs_per_range', type=int, default=4, help='Number of runs per range') 
     argparser.add_argument('--no_examples', action='store_false', help='Do not run examples block')
     argparser.add_argument('--no_feedback', action='store_false', help='Do not run feedback block')
     args = argparser.parse_args()
     main(subject=args.subject, session=args.session, range=args.range, settings=args.settings, 
+         pulse=args.pulse,
          run_examples=args.no_examples, run_feedback=args.no_feedback)

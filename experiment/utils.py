@@ -103,6 +103,8 @@ class OutroTrial(InstructionTrial):
                          **kwargs)
 
     def draw(self):
+        if self.session.sendPulses:
+            self.session.labjack_pulse()
         self.session.fixation_lines.draw()
         super().draw()
 
