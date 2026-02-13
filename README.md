@@ -1,4 +1,4 @@
-# work in progress
+# How to install and run a numerosity-estimation task with one range
 
 
 1. Clone this repo
