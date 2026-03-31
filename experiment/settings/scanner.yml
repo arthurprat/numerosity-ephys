@@ -60,6 +60,8 @@ ranges:
   narrow: [10, 25]
   wide: [10, 40]
 
+prob_numerals: 0.2
+
 durations:
   first_fixation: 0.3
   second_fixation: 0.3

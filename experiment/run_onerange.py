@@ -42,8 +42,13 @@ class OneRangeSession(EstimationSession):
         self.trials += [instruction_trial1, instruction_trial2]
         n_examples = self.settings['feedback'].get('n_examples')
         ns = np.random.randint(self.settings['range'][0], self.settings['range'][1] + 1, n_examples)
+        prob_numerals = self.settings.get('prob_numerals', 0.0)
+        stimulus_formats = np.where(np.random.rand(n_examples) < prob_numerals, 'numeral', 'dots')
 
-        self.trials += [FeedbackTrial(self, i+1, n=n) for i, n in enumerate(ns)]
+        self.trials += [
+            FeedbackTrial(self, i + 1, n=n, stimulus_format=stimulus_format)
+            for i, (n, stimulus_format) in enumerate(zip(ns, stimulus_formats))
+        ]
 
         if not self.settings.get('skip_outro', False):
             self.trials.append(OutroTrial(session=self))
@@ -65,17 +70,39 @@ class OneRangeSession(EstimationSession):
         n_trials = self.settings['task'].get('n_trials')
         range = self.settings['range']
         ns = np.random.randint(range[0], range[1] + 1, n_trials)
+        prob_numerals = self.settings.get('prob_numerals', 0.0)
+        stimulus_formats = np.where(np.random.rand(n_trials) < prob_numerals, 'numeral', 'dots')
 
         no_isi_no_jitter = self.settings.get('no_isi_no_jitter', False)
         if no_isi_no_jitter:
-            self.trials += [TaskTrial(self, i+1, jitter=0, n=n, stimulus_series=self.settings['cloud']['stimulus_series']) for i,n in enumerate(ns)]
+            self.trials += [
+                TaskTrial(
+                    self,
+                    i + 1,
+                    jitter=0,
+                    n=n,
+                    stimulus_series=self.settings['cloud']['stimulus_series'],
+                    stimulus_format=stimulus_format
+                )
+                for i, (n, stimulus_format) in enumerate(zip(ns, stimulus_formats))
+            ]
         else:
             possible_isis = self.settings['durations'].get('isi')
             isis = possible_isis * int(np.ceil(n_trials / len(possible_isis)))
             isis = isis[:n_trials]
             np.random.shuffle(isis)
 
-            self.trials += [TaskTrial(self, i+1, jitter=jitter, n=n, stimulus_series=self.settings['cloud']['stimulus_series']) for i, (n, jitter) in enumerate(zip(ns, isis))]
+            self.trials += [
+                TaskTrial(
+                    self,
+                    i + 1,
+                    jitter=jitter,
+                    n=n,
+                    stimulus_series=self.settings['cloud']['stimulus_series'],
+                    stimulus_format=stimulus_format
+                )
+                for i, (n, jitter, stimulus_format) in enumerate(zip(ns, isis, stimulus_formats))
+            ]
 
         if not self.settings.get('skip_outro', False):
             self.trials.append(OutroTrial(session=self))

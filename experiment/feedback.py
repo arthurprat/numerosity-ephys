@@ -11,7 +11,7 @@ from score import ScoreTrial
 
 class FeedbackTrial(Trial):
 
-    def __init__(self, session, trial_nr, n=15, **kwargs):
+    def __init__(self, session, trial_nr, n=15, stimulus_format='dots', **kwargs):
 
         phase_durations = [session.settings['durations']['first_fixation'],  # 0
                             session.settings['durations']['second_fixation'],# 1
@@ -23,11 +23,21 @@ class FeedbackTrial(Trial):
         super().__init__(session, trial_nr, phase_durations, phase_names=phase_names, **kwargs)
 
         self.parameters['n'] = n
+        self.parameters['stimulus_format'] = stimulus_format
 
         aperture_radius = self.session.settings['cloud'].get('aperture_radius')
         dot_radius = self.session.settings['cloud'].get('dot_radius')
 
-        self.stimulus_array = _create_stimulus_array(self.session.win, n, aperture_radius, dot_radius)
+        if stimulus_format == 'numeral':
+            self.stimulus = TextStim(
+                self.session.win,
+                text=str(n),
+                pos=(0, 0),
+                color=(-1, 1, -1),
+                height=aperture_radius * 0.8
+            )
+        else:
+            self.stimulus = _create_stimulus_array(self.session.win, n, aperture_radius, dot_radius)
 
         text_pos = (0, self.session.response_slider.height * 1.5)
 
@@ -60,7 +70,7 @@ class FeedbackTrial(Trial):
         # Show stimulus
         elif self.phase == 2:
             self.session.fixation_lines.draw()
-            self.stimulus_array.draw()
+            self.stimulus.draw()
             response_slider.show_marker = False
             response_slider.setMarkerPosition(self.start_marker_position)
 
@@ -127,8 +137,11 @@ class FeedbackSession(EstimationSession):
         """Create trials."""
         n_examples = self.settings['feedback'].get('n_examples')
         ns = np.random.randint(self.settings['range'][0], self.settings['range'][1] + 1, n_examples)
+        prob_numerals = self.settings.get('prob_numerals', 0.0)
+        stimulus_formats = np.where(np.random.rand(n_examples) < prob_numerals, 'numeral', 'dots')
 
-        self.trials += [FeedbackTrial(self, i+1, n=n) for i, n in enumerate(ns)]
+        self.trials += [FeedbackTrial(self, i+1, n=n, stimulus_format=stimulus_format)
+                        for i, (n, stimulus_format) in enumerate(zip(ns, stimulus_formats))]
 
         if not self.settings.get('skip_outro', False):
             self.trials.append(OutroTrial(session=self))

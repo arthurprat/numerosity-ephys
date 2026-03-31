@@ -17,7 +17,8 @@ class TaskTrial(Trial):
     def __init__(self, session, trial_nr, phase_durations=None,
                 jitter=1,
                 stimulus_series=False,
-                n=15, **kwargs):
+                n=15,
+                stimulus_format='dots', **kwargs):
 
         if phase_durations is None:
             if stimulus_series:
@@ -62,7 +63,22 @@ class TaskTrial(Trial):
 
         self.parameters['n'] = n
         self.parameters['jitter'] = jitter
-        self.stimulus_array = _create_stimulus_array(self.session.win, n, self.session.settings['cloud'].get('aperture_radius'), self.session.settings['cloud'].get('dot_radius'),)
+        self.parameters['stimulus_format'] = stimulus_format
+        if stimulus_format == 'numeral':
+            self.stimulus = TextStim(
+                self.session.win,
+                text=str(n),
+                pos=(0, 0),
+                color=(-1, 1, -1),
+                height=self.session.settings['cloud'].get('aperture_radius') * 0.8
+            )
+        else:
+            self.stimulus = _create_stimulus_array(
+                self.session.win,
+                n,
+                self.session.settings['cloud'].get('aperture_radius'),
+                self.session.settings['cloud'].get('dot_radius'),
+            )
 
         self.too_late_stimulus = TextStim(self.session.win, text='Too late!', pos=(0, 0), color=(1, -1, -1), height=0.5)
         self.parameters['start_marker_position'] = np.random.randint(self.session.settings['range'][0], self.session.settings['range'][1] + 1)
@@ -129,16 +145,16 @@ class TaskTrial(Trial):
             self.session.fixation_lines.setColor((1, -1, -1), fixation_cross_only=True)
         elif self.phase in self.stimulus_phase:
 
-            if self.stimulus_series:
+            if self.stimulus_series and self.parameters['stimulus_format'] == 'dots':
                 if self.previous_phase != self.phase:
                     if self.phase == 3:
-                        self.stimulus_array.xys[:, 0] *= -1
+                        self.stimulus.xys[:, 0] *= -1
                     if self.phase == 4:
-                        self.stimulus_array.xys[:, 1] *= -1
+                        self.stimulus.xys[:, 1] *= -1
                     if self.phase == 5:
-                        self.stimulus_array.xys[:, 0] *= -1
+                        self.stimulus.xys[:, 0] *= -1
 
-            self.stimulus_array.draw()
+            self.stimulus.draw()
 
         if (self.phase == (self.response_phase - 1)) or (self.parameters['jitter']==0. and self.phase in self.stimulus_phase):
             response_slider.setMarkerPosition(self.parameters['start_marker_position'])
@@ -179,17 +195,39 @@ class TaskSession(EstimationSession):
         n_trials = self.settings['task'].get('n_trials')
         range = self.settings['range']
         ns = np.random.randint(range[0], range[1] + 1, n_trials)
+        prob_numerals = self.settings.get('prob_numerals', 0.0)
+        stimulus_formats = np.where(np.random.rand(n_trials) < prob_numerals, 'numeral', 'dots')
 
         no_isi_no_jitter = self.settings.get('no_isi_no_jitter', False)
         if no_isi_no_jitter:
-            self.trials += [TaskTrial(self, i+1, jitter=0, n=n, stimulus_series=self.settings['cloud']['stimulus_series']) for i,n in enumerate(ns)]
+            self.trials += [
+                TaskTrial(
+                    self,
+                    i + 1,
+                    jitter=0,
+                    n=n,
+                    stimulus_series=self.settings['cloud']['stimulus_series'],
+                    stimulus_format=stimulus_format
+                )
+                for i, (n, stimulus_format) in enumerate(zip(ns, stimulus_formats))
+            ]
         else:
             possible_isis = self.settings['durations'].get('isi')
             isis = possible_isis * int(np.ceil(n_trials / len(possible_isis)))
             isis = isis[:n_trials]
             np.random.shuffle(isis)
 
-            self.trials += [TaskTrial(self, i+1, jitter=jitter, n=n, stimulus_series=self.settings['cloud']['stimulus_series']) for i, (n, jitter) in enumerate(zip(ns, isis))]
+            self.trials += [
+                TaskTrial(
+                    self,
+                    i + 1,
+                    jitter=jitter,
+                    n=n,
+                    stimulus_series=self.settings['cloud']['stimulus_series'],
+                    stimulus_format=stimulus_format
+                )
+                for i, (n, jitter, stimulus_format) in enumerate(zip(ns, isis, stimulus_formats))
+            ]
 
         if not self.settings.get('skip_outro', False):
             self.trials.append(OutroTrial(session=self))
