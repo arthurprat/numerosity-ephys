@@ -3,7 +3,7 @@ import os.path as op
 from psychopy.visual import Slider
 from psychopy import event
 from exptools2.core import PylinkEyetrackerSession, Trial
-from utils import _create_stimulus_array, get_output_dir_str, DummyWaiterTrial, OutroTrial, get_settings
+from utils import _create_stimulus_array, get_output_dir_str, DummyWaiterTrial, OutroTrial, get_settings, serialize_dot_positions
 from instruction import InstructionTrial
 from stimuli import FixationLines, ResponseSlider
 import numpy as np
@@ -79,6 +79,9 @@ class TaskTrial(Trial):
                 self.session.settings['cloud'].get('aperture_radius'),
                 self.session.settings['cloud'].get('dot_radius'),
             )
+            self.parameters['dot_positions'] = serialize_dot_positions(self.stimulus)
+        if stimulus_format == 'numeral':
+            self.parameters['dot_positions'] = ''
 
         self.too_late_stimulus = TextStim(self.session.win, text='Too late!', pos=(0, 0), color=(1, -1, -1), height=0.5)
         self.parameters['start_marker_position'] = np.random.randint(self.session.settings['range'][0], self.session.settings['range'][1] + 1)

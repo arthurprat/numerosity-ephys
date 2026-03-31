@@ -1,7 +1,7 @@
 from session import EstimationSession
 from exptools2.core import Trial
 import numpy as np
-from utils import _create_stimulus_array, get_output_dir_str, OutroTrial, get_settings
+from utils import _create_stimulus_array, get_output_dir_str, OutroTrial, get_settings, serialize_dot_positions
 from psychopy.visual import TextStim
 import os.path as op
 import argparse
@@ -36,8 +36,10 @@ class FeedbackTrial(Trial):
                 color=(-1, 1, -1),
                 height=aperture_radius * 0.8
             )
+            self.parameters['dot_positions'] = ''
         else:
             self.stimulus = _create_stimulus_array(self.session.win, n, aperture_radius, dot_radius)
+            self.parameters['dot_positions'] = serialize_dot_positions(self.stimulus)
 
         text_pos = (0, self.session.response_slider.height * 1.5)
 

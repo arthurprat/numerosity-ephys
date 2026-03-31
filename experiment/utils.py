@@ -4,6 +4,7 @@ import os.path as op
 import logging
 from exptools2.core import Trial
 import yaml
+import json
 from instruction import InstructionTrial
 
 def _sample_dot_positions(n=10, circle_radius=20, dot_radius=1, min_ecc=0.2, max_n_tries=10000):
@@ -45,6 +46,10 @@ class RadialStimArray(object):
 def _create_stimulus_array(win, n_dots, circle_radius, dot_radius):
     xys = _sample_dot_positions(n_dots, circle_radius, dot_radius)
     return RadialStimArray(win, xys, dot_radius)
+
+
+def serialize_dot_positions(stimulus):
+    return json.dumps(np.round(stimulus.xys, 4).tolist(), separators=(',', ':'))
 
 
 def get_output_dir_str(subject, session, task, run):

@@ -1,7 +1,7 @@
 from session import EstimationSession
 from exptools2.core import Trial
 import numpy as np
-from utils import _create_stimulus_array, get_output_dir_str, get_settings
+from utils import _create_stimulus_array, get_output_dir_str, get_settings, serialize_dot_positions
 from psychopy.visual import TextStim
 import os.path as op
 import argparse
@@ -21,6 +21,7 @@ class ExampleTrial(Trial):
         dot_radius = self.session.settings['cloud'].get('dot_radius')
 
         self.stimulus_array = _create_stimulus_array(self.session.win, n, aperture_radius, dot_radius)
+        self.parameters['dot_positions'] = serialize_dot_positions(self.stimulus_array)
 
         text_pos = (0, -aperture_radius * 1.3)
         self.n_text_stimulus = TextStim(self.session.win, text=n, pos=text_pos, color=(-1, 1, -1))
