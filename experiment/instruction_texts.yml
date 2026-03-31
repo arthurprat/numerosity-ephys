@@ -10,10 +10,12 @@ intro_part2:
   "Part 2.\n\n
   Report the number of dots using the slider.\n\n
   You will receive feedback on the actual number of dots.\n\n
+  Sometimes the number will be directly shown as Arabic numerals instead of a cloud of dots.\n\n
   NOTE: Your accuracy will influence your monetary bonus!"
 
 intro_part3:
   "Part 3.\n\n
   You will receive NO feedback anymore.\n\n
-  NOTE: your accuracy influences your monetary bonus!\n\n
-  This is run {run}/8."
+  Sometimes the number will be directly shown as Arabic numerals instead of a cloud of dots.\n\n
+  NOTE: your accuracy influences your monetary bonus!"
+  #This is run {run}/8.
