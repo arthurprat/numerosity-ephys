@@ -18,12 +18,8 @@ class EstimationSession(PylinkEyetrackerSession):
         self.show_eyetracker_calibration = calibrate_eyetracker
         self.sendPulses = sendPulses
         if self.sendPulses:
-
             self.eeglog_path = op.join(self.output_dir, self.output_str + ".eeglog")
-            self.eeglog = open(self.eeglog_path, "a")
-            timestamp = round(time.time()*1000)
-            toPrint = str(timestamp)+'\t0\t'+'log starts\n'
-            self.eeglog.write(toPrint)
+            self.eeglog = None
 
             import u3
             try:
@@ -40,8 +36,7 @@ class EstimationSession(PylinkEyetrackerSession):
                         print('FakeLabjack: close.')
                 self.labjack = FakeLabjack()
             self.labjack_timeDelay = np.random.uniform(0.8,1.2)
-            self.labjack_startTime = time.time()
-            print(self.labjack_startTime)
+            self.labjack_startTime = None
         self.mouse = event.Mouse(visible=False)
 
         self.instructions = yaml.safe_load(open(op.join(op.dirname(__file__), 'instruction_texts.yml'), 'r'))
@@ -57,16 +52,21 @@ class EstimationSession(PylinkEyetrackerSession):
                                             **self.settings['fixation_lines'])
 
         self._setup_response_slider()
+
+    def _clock_to_unix_ms(self, psychopy_time=None):
+        if psychopy_time is None:
+            psychopy_time = self.clock.getTime()
+        return round((self.clock._epochTimeAtLastReset + psychopy_time) * 1000)
     
     ######## PULSE ########
     ######## Inspired by 'Zaghloul Lab Synchronization Code' #######
     def labjack_pulse(self):
         if not self.sendPulses:
             return
-        currentTime = time.time()
+        currentTime = self.clock.getTime()
         if currentTime > self.labjack_startTime+self.labjack_timeDelay:
             self.labjack.setFIOState(0,1)
-            timestamp = round(time.time()*1000) #Check timezone
+            timestamp = self._clock_to_unix_ms(currentTime)
             toPrint = str(timestamp)+'\t1\t'+'CHANNEL_0_UP\n'
             self.eeglog.write(toPrint)
             time.sleep(0.01)
@@ -101,6 +101,14 @@ class EstimationSession(PylinkEyetrackerSession):
 
         self.start_experiment()
 
+        if self.sendPulses:
+            self.eeglog = open(self.eeglog_path, "a")
+            timestamp = self._clock_to_unix_ms(0.0)
+            toPrint = str(timestamp)+'\t0\t'+'log starts\n'
+            self.eeglog.write(toPrint)
+            self.labjack_startTime = self.clock.getTime()
+            print(self.labjack_startTime)
+
         if self.eyetracker_on:
             self.start_recording_eyetracker()
         for trial in self.trials:
@@ -108,9 +116,23 @@ class EstimationSession(PylinkEyetrackerSession):
         
         if self.sendPulses:
             self.labjack.close()
-            timestamp = round(time.time()*1000)
+            timestamp = self._clock_to_unix_ms()
             toPrint = str(timestamp)+'\t0\t'+'log stops\n'
             self.eeglog.write(toPrint)
             self.eeglog.close()
 
         self.close()
+
+    def close(self):
+        if self.closed:
+            return None
+
+        super().close()
+
+        if self.global_log.empty:
+            return None
+
+        log_df = self.global_log.reset_index()
+        log_df.insert(0, 'unix_timestamp', np.rint((self.clock._epochTimeAtLastReset + log_df['onset'].astype(float)) * 1000).astype('int64'))
+        self.global_log = log_df
+        self.global_log.to_csv(op.join(self.output_dir, self.output_str + "_events.tsv"), sep="\t", index=False)
