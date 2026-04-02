@@ -126,9 +126,11 @@ class FeedbackTrial(Trial):
             #if (not self.session.mouse.getPressed()[0]) and (self.session.mouse.getPos()[0] != response_slider.marker.pos[0]):
             try:
                 self.session.mouse.setPos((response_slider.marker.pos[0],0))
-                self.last_mouse_pos = response_slider.marker.pos[0] / self.session.settings['interface']['mouse_multiplier']
+                #self.last_mouse_pos = response_slider.marker.pos[0] / self.session.settings['interface']['mouse_multiplier']
             except Exception as e:
                 print(e)
+            
+            self.last_mouse_pos = self.session.mouse.getPos()[0]/self.session.settings['interface']['mouse_multiplier']
 
         elif self.phase == 3: # Show slider
             current_mouse_pos = self.session.mouse.getPos()[0] / self.session.settings['interface']['mouse_multiplier']
@@ -144,7 +146,7 @@ class FeedbackTrial(Trial):
                 self.last_mouse_pos  = current_mouse_pos
 
             if self.session.mouse.getPressed()[0]:  # Check if the left mouse button is pressed
-                print('LALA feedback', self.session.mouse.getPressed())
+                #print('LALA feedback', self.session.mouse.getPressed())
                 self.parameters['response'] = response_slider.marker_position
                 self.response = response_slider.marker_position
                 self.stop_phase()
