@@ -150,7 +150,11 @@ def main(subject, session, range, settings, pulse, run_examples=True, run_feedba
     one_range_session.run()
 
     #print(one_range_session.global_log)
-    one_range_session.global_log.to_csv(op.join(output_dir, f'{output_str}_global_log.csv'), index=False)
+    timestamp_suffix = datetime.datetime.now().strftime("%Y%m%d_%Hh%M")
+    one_range_session.global_log.to_csv(
+        op.join(output_dir, f'{output_str}_global_log_{timestamp_suffix}.csv'),
+        index=False
+    )
 
     print(one_range_session.trials[-1].text.text)
 
