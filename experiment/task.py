@@ -126,7 +126,7 @@ class TaskTrial(Trial):
 
             if not hasattr(self, 'response_onset'):
                 current_mouse_pos = self.session.mouse.getPos()[0]/self.session.settings['interface']['mouse_multiplier']
-                if np.abs(self.last_mouse_pos - current_mouse_pos) > response_slider.delta_rating_deg:
+                if np.abs(self.last_mouse_pos - current_mouse_pos) > 0.05 * response_slider.delta_rating_deg:
                     marker_position = response_slider.mouseToMarkerPosition(current_mouse_pos)
                     response_slider.setMarkerPosition(marker_position)
                     self.last_mouse_pos  = current_mouse_pos

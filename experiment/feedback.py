@@ -131,9 +131,9 @@ class FeedbackTrial(Trial):
                 print(e)
 
         elif self.phase == 3: # Show slider
-            current_mouse_pos = self.session.mouse.getPos()[0]
+            current_mouse_pos = self.session.mouse.getPos()[0] / self.session.settings['interface']['mouse_multiplier']
 
-            if np.abs(self.last_mouse_pos - current_mouse_pos) > response_slider.delta_rating_deg:
+            if np.abs(self.last_mouse_pos - current_mouse_pos) > .05 * response_slider.delta_rating_deg:
                 self.session.response_slider.show_marker = True
                 # direction = 1 if current_mouse_pos > self.last_mouse_pos else -1
                 # response_slider.setMarkerPosition(response_slider.marker_position + direction)

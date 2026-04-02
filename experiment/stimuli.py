@@ -217,7 +217,7 @@ class ResponseSlider(object):
         self.marker_position = number
 
     def mouseToMarkerPosition(self, mouse_pos):
-        return int((mouse_pos - self.bar.pos[0] + self.bar.width/2) / self.bar.width * (self.range[1] - self.range[0]) + self.range[0])
+        return int( np.round((mouse_pos - self.bar.pos[0] + self.bar.width/2) / self.bar.width * (self.range[1] - self.range[0]) + self.range[0]) )
 
     @property
     def pos(self):
