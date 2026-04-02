@@ -67,15 +67,17 @@ class OneRangeSession(EstimationSession):
         # if not include_instructions:
         #     self.trials = self.trials[1:]
 
-        n_trials = self.settings['task'].get('n_trials')
-        range = self.settings['range']
-        ns = np.random.randint(range[0], range[1] + 1, n_trials)
+        n_blocks = self.settings['main'].get('n_runs', 1)
+        trials_per_block = self.settings['task'].get('n_trials')
+        n_task_trials = n_blocks * trials_per_block
+        stimulus_range = self.settings['range']
+        ns = np.random.randint(stimulus_range[0], stimulus_range[1] + 1, n_task_trials)
         prob_numerals = self.settings.get('prob_numerals', 0.0)
-        stimulus_formats = np.where(np.random.rand(n_trials) < prob_numerals, 'numeral', 'dots')
+        stimulus_formats = np.where(np.random.rand(n_task_trials) < prob_numerals, 'numeral', 'dots')
 
         no_isi_no_jitter = self.settings.get('no_isi_no_jitter', False)
         if no_isi_no_jitter:
-            self.trials += [
+            task_trials = [
                 TaskTrial(
                     self,
                     i + 1,
@@ -88,11 +90,11 @@ class OneRangeSession(EstimationSession):
             ]
         else:
             possible_isis = self.settings['durations'].get('isi')
-            isis = possible_isis * int(np.ceil(n_trials / len(possible_isis)))
-            isis = isis[:n_trials]
+            isis = possible_isis * int(np.ceil(n_task_trials / len(possible_isis)))
+            isis = isis[:n_task_trials]
             np.random.shuffle(isis)
 
-            self.trials += [
+            task_trials = [
                 TaskTrial(
                     self,
                     i + 1,
@@ -103,6 +105,25 @@ class OneRangeSession(EstimationSession):
                 )
                 for i, (n, jitter, stimulus_format) in enumerate(zip(ns, isis, stimulus_formats))
             ]
+
+        for block_index in range(n_blocks):
+            start = block_index * trials_per_block
+            stop = start + trials_per_block
+            self.trials += task_trials[start:stop]
+
+            if block_index < (n_blocks - 1):
+                self.trials.append(
+                    InstructionTrial(
+                        self,
+                        0,
+                        self.instructions['break_between_blocks'].format(
+                            current_block=block_index + 1,
+                            total_blocks=n_blocks
+                        ),
+                        bottom_txt='Press space or click to continue',
+                        keys=['space']
+                    )
+                )
 
         if not self.settings.get('skip_outro', False):
             self.trials.append(OutroTrial(session=self))

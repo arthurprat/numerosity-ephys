@@ -19,3 +19,8 @@ intro_part3:
   Sometimes the number will be directly shown as Arabic numerals instead of a cloud of dots.\n\n
   NOTE: your accuracy influences your monetary bonus!"
   #This is run {run}/8.
+
+break_between_blocks:
+  "End of block {current_block}/{total_blocks}.\n\n
+  You can relax for a moment and take your time.\n\n
+  Press space or click when you are ready to continue."
