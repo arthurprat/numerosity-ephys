@@ -71,7 +71,7 @@ durations:
   second_fixation: 0.3
   array_duration: 0.6
   isi: [4., 5., 6.]
-  response_screen: 120. #3.0
+  response_screen: 6.0
   feedback: 0.5
 
 fixation_lines:

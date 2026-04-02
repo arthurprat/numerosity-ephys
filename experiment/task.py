@@ -31,6 +31,7 @@ class TaskTrial(Trial):
                                 jitter,
                                 session.settings['durations']['response_screen'],
                                 session.settings['durations']['feedback'],
+                                0.0,
                                 0.0]
             else:
                 phase_durations = [session.settings['durations']['first_fixation'],
@@ -39,6 +40,7 @@ class TaskTrial(Trial):
                                 jitter,
                                 session.settings['durations']['response_screen'],
                                 session.settings['durations']['feedback'],
+                                0.0,
                                 0.0]
 
         self.total_duration = np.sum(phase_durations)
@@ -48,16 +50,20 @@ class TaskTrial(Trial):
         self.stimulus_phase = [2]
         self.response_phase = 4
         self.feedback_phase = 5
+        self.timeout_phase = 6
+        self.iti_phase = 7
 
         if self.stimulus_series:
             self.stimulus_phase += [3, 4, 5]
             self.response_phase = 7
             self.feedback_phase = 8
+            self.timeout_phase = 9
+            self.iti_phase = 10
 
-        phase_names = ['fixation1', 'fixation2', 'stimulus', 'jitter', 'response', 'feedback', 'iti']
+        phase_names = ['fixation1', 'fixation2', 'stimulus', 'jitter', 'response', 'feedback', 'timeout', 'iti']
 
         if self.stimulus_series:
-            phase_names = ['fixation1', 'fixation2', 'stimulus1', 'stimulus2', 'stimulus3', 'stimulus4', 'jitter', 'response', 'feedback', 'iti']
+            phase_names = ['fixation1', 'fixation2', 'stimulus1', 'stimulus2', 'stimulus3', 'stimulus4', 'jitter', 'response', 'feedback', 'timeout', 'iti']
 
         super().__init__(session, trial_nr, phase_durations, phase_names=phase_names, **kwargs)
 
@@ -83,12 +89,23 @@ class TaskTrial(Trial):
         if stimulus_format == 'numeral':
             self.parameters['dot_positions'] = ''
 
-        self.too_late_stimulus = TextStim(self.session.win, text='Too late!', pos=(0, 0), color=(1, -1, -1), height=0.5)
+        timeout_seconds = self.session.settings['durations']['response_screen']
+        self.too_late_stimulus = TextStim(
+            self.session.win,
+            text=(
+                f'Too late!\n\n'
+                f'Please answer within {timeout_seconds:g} seconds.\n\n'
+                'Press space or click to continue.'
+            ),
+            pos=(0, 0),
+            color=(1, 1, 1),
+            height=0.5
+        )
         self.parameters['start_marker_position'] = np.random.randint(self.session.settings['range'][0], self.session.settings['range'][1] + 1)
 
     def get_events(self):
 
-        _ = super().get_events()
+        events = super().get_events()
 
         #buttons = self.session.settings['']
 
@@ -122,8 +139,12 @@ class TaskTrial(Trial):
 
                     if self.parameters['jitter']>0.: # here we assume that if there is a jitter then it must mean that we have a fixed total duration 
                         time_so_far = self.session.clock.getTime() - self.start_trial
-                        self.phase_durations[6] = self.total_duration - time_so_far - self.phase_durations[5]
+                        self.phase_durations[self.iti_phase] = self.total_duration - time_so_far - self.phase_durations[self.feedback_phase]
                     self.stop_phase()
+
+        elif self.phase == self.timeout_phase and not hasattr(self, 'response_onset'):
+            if any(key == 'space' for key, _ in events) or self.session.mouse.getPressed()[0]:
+                self.stop_phase()
 
         #super().get_events()
 
@@ -172,7 +193,13 @@ class TaskTrial(Trial):
                 response_slider.marker.inner_color = self.session.settings['slider'].get('feedbackColor')
                 response_slider.draw()
             else:
-                self.too_late_stimulus.draw()
+                if self.previous_phase != self.phase:
+                    self.phase_durations[self.timeout_phase] = np.inf
+                    self.stop_phase()
+        elif self.phase == self.timeout_phase:
+            if self.previous_phase != self.phase:
+                self.session.mouse.clickReset()
+            self.too_late_stimulus.draw()
                     
         self.previous_phase = self.phase
         #self.session.mouse.clickReset()

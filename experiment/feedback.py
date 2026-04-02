@@ -16,10 +16,11 @@ class FeedbackTrial(Trial):
         phase_durations = [session.settings['durations']['first_fixation'],  # 0
                             session.settings['durations']['second_fixation'],# 1
                             session.settings['durations']['array_duration'], # 2
-                            120,                                            # 3             
-                            session.settings['durations']['feedback']]    # 4
+                            session.settings['durations']['response_screen'],# 3
+                            session.settings['durations']['feedback'],     # 4
+                            0.0]                                           # 5
 
-        phase_names = ['fixation1', 'fixation2', 'stimulus', 'response', 'feedback']
+        phase_names = ['fixation1', 'fixation2', 'stimulus', 'response', 'feedback', 'timeout']
         super().__init__(session, trial_nr, phase_durations, phase_names=phase_names, **kwargs)
 
         self.parameters['n'] = n
@@ -42,11 +43,25 @@ class FeedbackTrial(Trial):
             self.parameters['dot_positions'] = serialize_dot_positions(self.stimulus)
 
         text_pos = (0, self.session.response_slider.height * 1.5)
+        timeout_seconds = self.session.settings['durations']['response_screen']
 
         self.n_text_stimulus = TextStim(self.session.win, text=n, pos=text_pos, color=(-1, 1, -1),
                                         height=self.session.settings['slider'].get('text_height'))
+        self.too_late_stimulus = TextStim(
+            self.session.win,
+            text=(
+                f'Too late!\n\n'
+                f'Please answer within {timeout_seconds:g} seconds.\n\n'
+                f'The correct number was {n}.\n\n'
+                'Press space or click to continue.'
+            ),
+            pos=(0, text_pos[1] * 0.2),
+            color=(1, 1, 1),
+            height=self.session.settings['slider'].get('text_height')
+        )
 
         self.start_marker_position = np.random.randint(self.session.settings['range'][0], self.session.settings['range'][1] + 1)
+        self.previous_phase = None
 
 
     def draw(self):
@@ -84,13 +99,26 @@ class FeedbackTrial(Trial):
 
         elif self.phase == 4:
             self.session.fixation_lines.draw()
-            response_slider.marker.inner_color = self.session.settings['slider'].get('feedbackColor')
-            response_slider.draw()
-            self.n_text_stimulus.draw()
+            if hasattr(self, 'response'):
+                response_slider.marker.inner_color = self.session.settings['slider'].get('feedbackColor')
+                response_slider.draw()
+                self.n_text_stimulus.draw()
+            else:
+                if self.previous_phase != self.phase:
+                    self.phase_durations[5] = np.inf
+                    self.stop_phase()
+
+        elif self.phase == 5:
+            self.session.fixation_lines.draw()
+            if self.previous_phase != self.phase:
+                self.session.mouse.clickReset()
+            self.too_late_stimulus.draw()
+
+        self.previous_phase = self.phase
 
     def get_events(self):
 
-        _ = super().get_events()
+        events = super().get_events()
 
         response_slider = self.session.response_slider
 
@@ -118,6 +146,11 @@ class FeedbackTrial(Trial):
             if self.session.mouse.getPressed()[0]:  # Check if the left mouse button is pressed
                 print('LALA feedback', self.session.mouse.getPressed())
                 self.parameters['response'] = response_slider.marker_position
+                self.response = response_slider.marker_position
+                self.stop_phase()
+
+        elif self.phase == 5 and not hasattr(self, 'response'):
+            if any(key == 'space' for key, _ in events) or self.session.mouse.getPressed()[0]:
                 self.stop_phase()
 
 
