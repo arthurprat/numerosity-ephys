@@ -9,6 +9,13 @@ from utils import get_output_dir_str, get_settings
 from exptools2.core import PylinkEyetrackerSession, Trial
 
 
+def get_score_rows(log_df, feedback_phase=None):
+    score_rows = log_df.set_index(['trial_nr', 'event_type']).xs('feedback', level='event_type').astype({'n': float, 'response': float})
+    if feedback_phase is not None:
+        score_rows = score_rows[score_rows['phase'] == feedback_phase]
+    return score_rows
+
+
 def get_subject_stats(subject, session, log_dir, max_reward=.1, reward_slope=.025, no_response_penalty=0.1):
     feedback_log_files = glob.glob(op.join(log_dir, f'sub-{subject}', f'ses-{session}', '*task-feedback_run-*_events.tsv'))
     estimation_log_files = glob.glob(op.join(log_dir, f'sub-{subject}', f'ses-{session}', '*task-estimation_task_run-*_events.tsv'))
@@ -71,24 +78,35 @@ class ScoreSession(EstimationSession):
         log_dir = op.join(op.dirname(__file__), 'logs')
         stats = get_subject_stats(self.settings['subject'], session, log_dir, max_reward, reward_slope, no_response_penalty)
 
-        txt1 = f"During the feedback task, you performed {stats['total_n_feedback_trials']} trials.\n\n" \
-            f"On {stats['n_no_responses_feedback']} trials, you did not respond in time, and you were penalized with {stats['n_no_responses_feedback'] *  no_response_penalty:.2f} CHF.\n\n" \
-            f"You made an average error of {stats['mean_error_feedback']:.2f} and an average absolute error of {stats['mean_abs_error_feedback']:.2f}.\n\n" \
-            f"In total, you earned {stats['total_reward_feedback']:.2f} CHF for the blocks with feedback."
+        txt1 = self.instructions['score_feedback_summary'].format(
+            total_n_feedback_trials=stats['total_n_feedback_trials'],
+            n_no_responses_feedback=stats['n_no_responses_feedback'],
+            lost_points_feedback=stats['n_no_responses_feedback'] * no_response_penalty,
+            mean_error_feedback=stats['mean_error_feedback'],
+            mean_abs_error_feedback=stats['mean_abs_error_feedback'],
+            total_reward_feedback=stats['total_reward_feedback'],
+        )
 
-        txt2 = f"During the estimation task, you performed {stats['total_n_estimation_trials']} trials.\n\n" \
-            f"On {stats['n_no_responses_estimation']} trials, you did not respond in time, and you were penalized with {stats['n_no_responses_estimation'] *  no_response_penalty:.2f} CHF.\n\n" \
-            f"You made an average error of {stats['mean_error_estimation']:.2f} and an average absolute error of {stats['mean_abs_error_estimation']:.2f}.\n\n" \
-            f"In total, you earned {stats['total_reward_estimation']:.2f} CHF for the blocks with feedback."
+        txt2 = self.instructions['score_estimation_summary'].format(
+            total_n_estimation_trials=stats['total_n_estimation_trials'],
+            n_no_responses_estimation=stats['n_no_responses_estimation'],
+            lost_points_estimation=stats['n_no_responses_estimation'] * no_response_penalty,
+            mean_error_estimation=stats['mean_error_estimation'],
+            mean_abs_error_estimation=stats['mean_abs_error_estimation'],
+            total_reward_estimation=stats['total_reward_estimation'],
+        )
         
-        txt3 = f"On top of your hourly fee, you will get a bonus of {stats['total_reward_feedback'] + stats['total_reward_estimation']:.2f} CHF for the whole session."
+        txt3 = self.instructions['score_total_summary'].format(
+            total_points=stats['total_reward_feedback'] + stats['total_reward_estimation']
+        )
 
         self.trials = [InstructionTrial(self, 0, txt1), InstructionTrial(self, 0, txt2), InstructionTrial(self, 0, txt3)]
 
 class ScoreTrial(InstructionTrial):
     """ Simple trial with only fixation cross.  """
 
-    def __init__(self, session, trial_nr=0, phase_durations=None, show_reward=True, **kwargs):
+    def __init__(self, session, trial_nr=0, phase_durations=None, show_reward=True, feedback_phase=None,
+                 block_index=None, total_blocks=None, bottom_txt='', **kwargs):
 
         #txt = '''Please lie still for a few moments.'''
 
@@ -97,9 +115,12 @@ class ScoreTrial(InstructionTrial):
 
         self.log = session.global_log
         self.show_reward = show_reward
+        self.feedback_phase = feedback_phase
+        self.block_index = block_index
+        self.total_blocks = total_blocks
 
         super().__init__(session=session, trial_nr=trial_nr, phase_durations=phase_durations, txt='',
-                         bottom_txt='', 
+                         bottom_txt=bottom_txt,
                          phase_names=['get_score', 'score'],
                          **kwargs)
 
@@ -116,25 +137,42 @@ class ScoreTrial(InstructionTrial):
 
     def get_score(self):
         self.log = self.session.global_log.copy()
-        print(self.log)
-        self.log = self.log.set_index(['trial_nr', 'event_type']).xs('feedback', level='event_type').astype({'n':float, 'response':float})
+        self.log = get_score_rows(self.log, feedback_phase=self.feedback_phase)
+
+        if self.log.empty:
+            if self.block_index is not None and self.total_blocks is not None:
+                self.text.text = self.session.instructions['score_block_summary_empty'].format(
+                    current_block=self.block_index,
+                    total_blocks=self.total_blocks,
+                )
+            else:
+                self.text.text = self.session.instructions['score_final_summary'].format(
+                    mean_abs_error=0.0,
+                    total_reward=0.0,
+                )
+            return
 
         self.error = self.log['n'] - self.log['response']
         self.mean_error = self.error.mean()
         self.mean_abs_error = self.error.abs().mean()
-
-        self.text.text = f'Thank you! On average your estimates were off by {self.mean_abs_error:.2f}.\n\n'
 
         max_reward = self.session.settings['score']['max_reward']
         reward_slope = self.session.settings['score']['reward_slope']
         self.total_reward = (max_reward - self.error.pow(2) * reward_slope).sum()
         self.parameters['total_reward'] = self.total_reward
 
-        if self.show_reward:
-            self.text.text += f'You earned a bonus of ${self.total_reward:.2f}.'
-            print('•••••••••••', self.total_reward)
-            print(self.text.text)
-            print('•••••••••••')
+        if self.block_index is not None and self.total_blocks is not None:
+            self.text.text = self.session.instructions['score_block_summary'].format(
+                current_block=self.block_index,
+                total_blocks=self.total_blocks,
+                total_reward=self.total_reward,
+                mean_abs_error=self.mean_abs_error,
+            )
+        else:
+            self.text.text = self.session.instructions['score_final_summary'].format(
+                mean_abs_error=self.mean_abs_error,
+                total_reward=self.total_reward,
+            )
 
         
 
@@ -162,4 +200,3 @@ if __name__ == "__main__":
     args = argparser.parse_args()
 
     main(args.subject, args.session, args.settings)
-

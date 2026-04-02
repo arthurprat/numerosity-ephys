@@ -113,14 +113,14 @@ class OneRangeSession(EstimationSession):
 
             if block_index < (n_blocks - 1):
                 self.trials.append(
-                    InstructionTrial(
+                    ScoreTrial(
                         self,
                         0,
-                        self.instructions['break_between_blocks'].format(
-                            current_block=block_index + 1,
-                            total_blocks=n_blocks
-                        ),
-                        bottom_txt='Press space or click to continue',
+                        feedback_phase=task_trials[0].feedback_phase,
+                        block_index=block_index + 1,
+                        total_blocks=n_blocks,
+                        phase_durations=[0.5, np.inf],
+                        bottom_txt=self.instructions['score_continue_prompt'],
                         keys=['space']
                     )
                 )

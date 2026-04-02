@@ -11,16 +11,51 @@ intro_part2:
   Report the number of dots using the slider.\n\n
   You will receive feedback on the actual number of dots.\n\n
   Sometimes the number will be directly shown as Arabic numerals instead of a cloud of dots.\n\n
-  NOTE: Your accuracy will influence your monetary bonus!"
+  NOTE: Your accuracy will influence your points."
 
 intro_part3:
   "Part 3.\n\n
   You will receive NO feedback anymore.\n\n
   Sometimes the number will be directly shown as Arabic numerals instead of a cloud of dots.\n\n
-  NOTE: your accuracy influences your monetary bonus!"
+  NOTE: your accuracy influences your points."
   #This is run {run}/8.
 
 break_between_blocks:
   "End of block {current_block}/{total_blocks}.\n\n
   You can relax for a moment and take your time.\n\n
   Press space or click when you are ready to continue."
+
+score_continue_prompt:
+  "Press space or click to continue"
+
+score_feedback_summary:
+  "During the feedback task, you performed {total_n_feedback_trials} trials.\n\n
+  On {n_no_responses_feedback} trials, you did not respond in time, and you lost {lost_points_feedback:.2f} points.\n\n
+  You made an average error of {mean_error_feedback:.2f} and an average absolute error of {mean_abs_error_feedback:.2f}.\n\n
+  In total, you earned {total_reward_feedback:.2f} points for the blocks with feedback."
+
+score_estimation_summary:
+  "During the estimation task, you performed {total_n_estimation_trials} trials.\n\n
+  On {n_no_responses_estimation} trials, you did not respond in time, and you lost {lost_points_estimation:.2f} points.\n\n
+  You made an average error of {mean_error_estimation:.2f} and an average absolute error of {mean_abs_error_estimation:.2f}.\n\n
+  In total, you earned {total_reward_estimation:.2f} points for the estimation task."
+
+score_total_summary:
+  "Your total score for the whole session was {total_points:.2f} points."
+
+score_block_summary:
+  "Block {current_block}/{total_blocks} complete.\n\n
+  Nice work.\n\n
+  On average your estimates were off by just {mean_abs_error:.2f}.\n\n
+  Current score: {total_reward:.2f} points."
+
+score_block_summary_empty:
+  "Block {current_block}/{total_blocks} complete.\n\n
+  Nice work.\n\n
+  On average you were off by just 0.00.\n\n
+  Current score: 0.00 points."
+
+score_final_summary:
+  "Thank you!\n\n
+  On average your estimates were off by just {mean_abs_error:.2f}.\n\n
+  You earned {total_reward:.2f} points."

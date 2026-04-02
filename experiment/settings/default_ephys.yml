@@ -54,7 +54,7 @@ task:
   n_trials: 3 #30
 
 main:
-  n_runs: 4
+  n_runs: 2
 
 ranges:
   narrow: [10, 25]
