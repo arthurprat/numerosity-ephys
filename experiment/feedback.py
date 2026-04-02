@@ -126,7 +126,7 @@ class FeedbackTrial(Trial):
             #if (not self.session.mouse.getPressed()[0]) and (self.session.mouse.getPos()[0] != response_slider.marker.pos[0]):
             try:
                 self.session.mouse.setPos((response_slider.marker.pos[0],0))
-                self.last_mouse_pos = response_slider.marker.pos[0]
+                self.last_mouse_pos = response_slider.marker.pos[0] / self.session.settings['interface']['mouse_multiplier']
             except Exception as e:
                 print(e)
 
