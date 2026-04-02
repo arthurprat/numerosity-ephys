@@ -53,17 +53,16 @@ def serialize_dot_positions(stimulus):
 
 
 def get_output_dir_str(subject, session, task, run):
-    output_dir = op.join(op.dirname(__file__), 'logs', f'sub-{subject}')
+    output_dir = op.join(op.dirname(__file__), 'data', f'sub-{subject}')
     logging.warn(f'Writing results to  {output_dir}')
 
     if session:
         output_dir = op.join(output_dir, f'ses-{session}')
-        output_str = f'sub-{subject}_ses-{session}_task-{task}'
-    else:
-        output_str = f'sub-{subject}_task-{task}'
-
+    task_dir = f'task-{task}'
     if run:
-        output_str += f'_run-{run}'
+        task_dir += f'_run-{run}'
+    output_dir = op.join(output_dir, task_dir)
+    output_str = 'session'
 
     return output_dir, output_str
 

@@ -10,13 +10,13 @@ intro_part2:
   "Part 2.\n\n
   Report the number of dots using the slider.\n\n
   You will receive feedback on the actual number of dots.\n\n
-  Sometimes the number will be directly shown as Arabic numerals instead of a cloud of dots.\n\n
+  Sometimes the number will be directly shown as numerals (e.g.: '22') instead of a cloud of dots. In these cases, just report the shown number.\n\n
   NOTE: Your accuracy will influence your points."
 
 intro_part3:
   "Part 3.\n\n
   You will receive NO feedback anymore.\n\n
-  Sometimes the number will be directly shown as Arabic numerals instead of a cloud of dots.\n\n
+  Sometimes the number will be directly shown as numerals (e.g.: '22') instead of a cloud of dots. In these cases, just report the shown number.\n\n
   NOTE: your accuracy influences your points."
   #This is run {run}/8.
 

@@ -18,7 +18,7 @@ class EstimationSession(PylinkEyetrackerSession):
         self.show_eyetracker_calibration = calibrate_eyetracker
         self.sendPulses = sendPulses
         if self.sendPulses:
-            self.eeglog_path = op.join(self.output_dir, self.output_str + ".eeglog")
+            self.eeglog_path = op.join(self.output_dir, "eeg.eeglog")
             self.eeglog = None
 
             import u3
@@ -136,3 +136,4 @@ class EstimationSession(PylinkEyetrackerSession):
         log_df.insert(0, 'unix_timestamp', np.rint((self.clock._epochTimeAtLastReset + log_df['onset'].astype(float)) * 1000).astype('int64'))
         self.global_log = log_df
         self.global_log.to_csv(op.join(self.output_dir, self.output_str + "_events.tsv"), sep="\t", index=False)
+        self.global_log.to_csv(op.join(self.output_dir, "session.log"), sep="\t", index=False)
