@@ -63,6 +63,8 @@ class FeedbackTrial(Trial):
         self.start_marker_position = np.random.randint(self.session.settings['range'][0], self.session.settings['range'][1] + 1)
         self.previous_phase = None
 
+        self.mouse_multiplier = self.session.settings['interface']['mouse_multiplier']
+
 
     def draw(self):
 
@@ -88,11 +90,14 @@ class FeedbackTrial(Trial):
         elif self.phase == 2:
             self.session.fixation_lines.draw()
             self.stimulus.draw()
-            response_slider.show_marker = False
-            response_slider.setMarkerPosition(self.start_marker_position)
 
         # Show slider
         elif self.phase == 3:
+            if self.previous_phase != self.phase:
+                response_slider.show_marker = False
+                response_slider.setMarkerPosition(self.start_marker_position)
+                self.session.mouse.setPos((response_slider.marker.pos[0] * self.mouse_multiplier,0))
+                self.start_mouse_pos_mult = self.session.mouse.getPos()[0] / self.mouse_multiplier
             response_slider.marker.inner_color = self.session.settings['slider'].get('color')
             self.session.fixation_lines.draw()
             response_slider.draw()
@@ -122,31 +127,17 @@ class FeedbackTrial(Trial):
 
         response_slider = self.session.response_slider
 
-        if self.phase == 2: # Show stimulus
-            #if (not self.session.mouse.getPressed()[0]) and (self.session.mouse.getPos()[0] != response_slider.marker.pos[0]):
-            try:
-                self.session.mouse.setPos((response_slider.marker.pos[0],0))
-                #self.last_mouse_pos = response_slider.marker.pos[0] / self.session.settings['interface']['mouse_multiplier']
-            except Exception as e:
-                print(e)
-            
-            self.last_mouse_pos = self.session.mouse.getPos()[0]/self.session.settings['interface']['mouse_multiplier']
+        if self.phase == 3: # Show slider
+            current_mouse_pos_mult = self.session.mouse.getPos()[0] / self.mouse_multiplier
 
-        elif self.phase == 3: # Show slider
-            current_mouse_pos = self.session.mouse.getPos()[0] / self.session.settings['interface']['mouse_multiplier']
+            #if np.abs(self.last_mouse_pos_mult - current_mouse_pos_mult) > .05 * response_slider.delta_rating_deg:
+            if (not response_slider.show_marker) and abs(self.start_mouse_pos_mult - current_mouse_pos_mult) > 1e-6:
+                response_slider.show_marker = True
 
-            if np.abs(self.last_mouse_pos - current_mouse_pos) > .05 * response_slider.delta_rating_deg:
-                self.session.response_slider.show_marker = True
-                # direction = 1 if current_mouse_pos > self.last_mouse_pos else -1
-                # response_slider.setMarkerPosition(response_slider.marker_position + direction)
-
-                marker_position = response_slider.mouseToMarkerPosition(current_mouse_pos)
-                response_slider.setMarkerPosition(marker_position)
-
-                self.last_mouse_pos  = current_mouse_pos
+            marker_position = response_slider.mouseToMarkerPosition(current_mouse_pos_mult)
+            response_slider.setMarkerPosition(marker_position)
 
             if self.session.mouse.getPressed()[0]:  # Check if the left mouse button is pressed
-                #print('LALA feedback', self.session.mouse.getPressed())
                 self.parameters['response'] = response_slider.marker_position
                 self.response = response_slider.marker_position
                 self.stop_phase()

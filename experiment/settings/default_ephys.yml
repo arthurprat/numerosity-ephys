@@ -45,7 +45,7 @@ various:
   text_color: [1, 1, 1]
 
 examples:
-  n_examples: 5 #15
+  n_examples: 2 #15 # has to be >= 2
 
 feedback:
   n_examples: 3 #30 # 30
@@ -84,7 +84,7 @@ mouse:
   visible: False
 
 interface:
-  mouse_multiplier: 1.
+  mouse_multiplier: 1. # the larger this is, the slower the mouse moves the slider 
 
 score:
   no_response_penalty: 1. #0.1

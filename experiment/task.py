@@ -5,9 +5,7 @@ from psychopy import event
 from exptools2.core import PylinkEyetrackerSession, Trial
 from utils import _create_stimulus_array, get_output_dir_str, DummyWaiterTrial, OutroTrial, get_settings, serialize_dot_positions
 from instruction import InstructionTrial
-from stimuli import FixationLines, ResponseSlider
 import numpy as np
-import logging
 from psychopy.visual import Line, Rect, TextStim
 from session import EstimationSession
 from score import ScoreTrial
@@ -103,6 +101,8 @@ class TaskTrial(Trial):
         )
         self.parameters['start_marker_position'] = np.random.randint(self.session.settings['range'][0], self.session.settings['range'][1] + 1)
 
+        self.mouse_multiplier = self.session.settings['interface']['mouse_multiplier']
+
     def get_events(self):
 
         events = super().get_events()
@@ -111,26 +111,16 @@ class TaskTrial(Trial):
 
         response_slider = self.session.response_slider
 
-        if (self.phase == (self.response_phase - 1)) or (self.parameters['jitter']==0. and self.phase in self.stimulus_phase):
-
-            if (not self.session.mouse.getPressed()[0]) and (self.session.mouse.getPos()[0] != response_slider.marker.pos[0]):
-                try:
-                    self.session.mouse.setPos((response_slider.marker.pos[0],0))
-                    #self.last_mouse_pos = response_slider.marker.pos[0]
-                except Exception as e:
-                    print(e)
-
-            self.last_mouse_pos = self.session.mouse.getPos()[0]/self.session.settings['interface']['mouse_multiplier']
-
-        elif self.phase == self.response_phase:
+        if self.phase == self.response_phase:
 
             if not hasattr(self, 'response_onset'):
-                current_mouse_pos = self.session.mouse.getPos()[0]/self.session.settings['interface']['mouse_multiplier']
-                if np.abs(self.last_mouse_pos - current_mouse_pos) > 0.05 * response_slider.delta_rating_deg:
-                    marker_position = response_slider.mouseToMarkerPosition(current_mouse_pos)
-                    response_slider.setMarkerPosition(marker_position)
-                    self.last_mouse_pos  = current_mouse_pos
+                current_mouse_pos_mult = self.session.mouse.getPos()[0]/self.mouse_multiplier
+                #if np.abs(self.last_mouse_pos - current_mouse_pos) > 0.05 * response_slider.delta_rating_deg:
+                if (not response_slider.show_marker) and abs(self.start_mouse_pos_mult - current_mouse_pos_mult) > 1e-6:
                     response_slider.show_marker = True
+
+                marker_position = response_slider.mouseToMarkerPosition(current_mouse_pos_mult)
+                response_slider.setMarkerPosition(marker_position)
                 
                 if self.session.mouse.getPressed()[0]:
                     self.response_onset = self.session.clock.getTime()
@@ -180,11 +170,16 @@ class TaskTrial(Trial):
 
             self.stimulus.draw()
 
-        if (self.phase == (self.response_phase - 1)) or (self.parameters['jitter']==0. and self.phase in self.stimulus_phase):
-            response_slider.setMarkerPosition(self.parameters['start_marker_position'])
-            response_slider.show_marker = False
+        # if (self.phase == (self.response_phase - 1)) or (self.parameters['jitter']==0. and self.phase in self.stimulus_phase):
+        #     response_slider.setMarkerPosition(self.parameters['start_marker_position'])
+        #     response_slider.show_marker = False
 
-        elif self.phase == self.response_phase:
+        if self.phase == self.response_phase:
+            if self.previous_phase != self.phase:
+                response_slider.show_marker = False
+                response_slider.setMarkerPosition(self.parameters['start_marker_position'])
+                self.session.mouse.setPos((response_slider.marker.pos[0] * self.mouse_multiplier,0))
+                self.start_mouse_pos_mult = self.session.mouse.getPos()[0] / self.mouse_multiplier
             response_slider.marker.inner_color = self.session.settings['slider'].get('color')
             response_slider.draw()
 

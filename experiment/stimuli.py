@@ -211,13 +211,22 @@ class ResponseSlider(object):
                 self.number.draw()
 
     def setMarkerPosition(self, number):
+        """Move the slider marker to the position corresponding to `number`.
+        The input value is clipped to the slider's allowed numeric range, then
+        mapped linearly onto the horizontal extent of the slider bar.
+        This updates both the marker's screen position and `self.marker_position` (the number).
+        """
         number = np.clip(number, self.range[0], self.range[1])
         position = self.bar.pos[0] + (number - self.range[0]) / (self.range[1] - self.range[0]) * self.bar.width - self.bar.width/2., self.bar.pos[1]
         self.marker.pos = position
         self.marker_position = number
 
     def mouseToMarkerPosition(self, mouse_pos):
-        return int( np.round((mouse_pos - self.bar.pos[0] + self.bar.width/2) / self.bar.width * (self.range[1] - self.range[0]) + self.range[0]) )
+        """Convert a horizontal mouse position into the nearest slider value.
+        The mouse x-coordinate is mapped linearly onto the slider's numeric range,
+        and the result is rounded to the nearest integer.
+        """
+        return int( np.round((mouse_pos - (self.bar.pos[0] - self.bar.width/2) ) / self.bar.width * (self.range[1] - self.range[0]) + self.range[0]) )
 
     @property
     def pos(self):
