@@ -67,7 +67,9 @@ class OneRangeSession(EstimationSession):
         # if not include_instructions:
         #     self.trials = self.trials[1:]
 
-        n_blocks = self.settings['main'].get('n_runs', 1)
+        n_blocks = self.settings.get('blocks', {}).get('n_blocks')
+        if n_blocks is None:
+            n_blocks = self.settings.get('main', {}).get('n_runs', 1)
         trials_per_block = self.settings['task'].get('n_trials')
         n_task_trials = n_blocks * trials_per_block
         stimulus_range = self.settings['range']

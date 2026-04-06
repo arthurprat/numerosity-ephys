@@ -51,10 +51,13 @@ feedback:
   n_examples: 3 #30 # 30
 
 task:
-  n_trials: 3 #30
+  n_trials: 3 #30 ### NUMBER OF TRIALS PER BLOCK
+
+blocks:
+  n_blocks: 2
 
 main:
-  n_runs: 2
+  n_runs: 2 ### NOT USED
 
 ranges:
   narrow: [10, 25]
