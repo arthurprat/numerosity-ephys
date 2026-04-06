@@ -134,6 +134,9 @@ class EstimationSession(PylinkEyetrackerSession):
 
         log_df = self.global_log.reset_index()
         log_df.insert(0, 'unix_timestamp', np.rint((self.clock._epochTimeAtLastReset + log_df['onset'].astype(float)) * 1000).astype('int64'))
+        if 'dot_positions' in log_df.columns:
+            reordered_columns = [column for column in log_df.columns if column != 'dot_positions'] + ['dot_positions']
+            log_df = log_df[reordered_columns]
         self.global_log = log_df
         self.global_log.to_csv(op.join(self.output_dir, self.output_str + "_events.tsv"), sep="\t", index=False)
         self.global_log.to_csv(op.join(self.output_dir, "session.log"), sep="\t", index=False)
