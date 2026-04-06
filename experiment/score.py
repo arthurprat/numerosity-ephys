@@ -144,10 +144,10 @@ class ScoreTrial(InstructionTrial):
         super().draw()
 
     def get_score(self):
-        self.log = self.session.global_log.copy()
-        self.log = get_score_rows(self.log, feedback_phase=self.feedback_phase, block_index=self.block_index)
+        log = self.session.global_log.copy()
+        score_rows = get_score_rows(log, feedback_phase=self.feedback_phase, block_index=self.block_index)
 
-        if self.log.empty:
+        if score_rows.empty:
             if self.block_index is not None and self.total_blocks is not None:
                 self.text.text = self.session.instructions['score_block_summary_empty'].format(
                     current_block=self.block_index,
@@ -157,10 +157,12 @@ class ScoreTrial(InstructionTrial):
                 self.text.text = self.session.instructions['score_final_summary'].format(
                     mean_abs_error=0.0,
                     total_reward=0.0,
+                    last_block_mean_abs_error=0.0,
+                    last_block_total_reward=0.0,
                 )
             return
 
-        self.error = self.log['n'] - self.log['response']
+        self.error = score_rows['n'] - score_rows['response']
         self.mean_error = self.error.mean()
         self.mean_abs_error = self.error.abs().mean()
 
@@ -177,9 +179,23 @@ class ScoreTrial(InstructionTrial):
                 mean_abs_error=self.mean_abs_error,
             )
         else:
+            last_block_mean_abs_error = self.mean_abs_error
+            last_block_total_reward = self.total_reward
+
+            if 'block_index' in score_rows.columns:
+                block_index = score_rows['block_index'].dropna().max()
+                if pd.notna(block_index):
+                    last_block_rows = score_rows[score_rows['block_index'] == block_index]
+                    if not last_block_rows.empty:
+                        last_block_error = last_block_rows['n'] - last_block_rows['response']
+                        last_block_mean_abs_error = last_block_error.abs().mean()
+                        last_block_total_reward = (max_reward - last_block_error.pow(2) * reward_slope).sum()
+
             self.text.text = self.session.instructions['score_final_summary'].format(
                 mean_abs_error=self.mean_abs_error,
                 total_reward=self.total_reward,
+                last_block_mean_abs_error=last_block_mean_abs_error,
+                last_block_total_reward=last_block_total_reward,
             )
 
         

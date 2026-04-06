@@ -58,4 +58,6 @@ score_block_summary_empty:
 score_final_summary:
   "Thank you!\n\n
   In the whole session, on average your estimates were off by just {mean_abs_error:.2f}.\n\n
-  You earned {total_reward:.2f} points."
+  Whole-session score: {total_reward:.2f} points.\n\n
+  In the last block, on average your estimates were off by just {last_block_mean_abs_error:.2f}.\n\n
+  Last-block score: {last_block_total_reward:.2f} points."
