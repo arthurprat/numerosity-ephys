@@ -43,6 +43,7 @@ class EstimationSession(PylinkEyetrackerSession):
 
         self.settings['subject'] = subject
         self.settings['run'] = run
+        self.settings['range_label'] = range
         self.settings['range'] = self.settings['ranges'].get(range)
 
 
@@ -134,9 +135,36 @@ class EstimationSession(PylinkEyetrackerSession):
 
         log_df = self.global_log.reset_index()
         log_df.insert(0, 'unix_timestamp', np.rint((self.clock._epochTimeAtLastReset + log_df['onset'].astype(float)) * 1000).astype('int64'))
+        log_df['range'] = self.settings['range_label']
         if 'dot_positions' in log_df.columns:
-            reordered_columns = [column for column in log_df.columns if column != 'dot_positions'] + ['dot_positions']
-            log_df = log_df[reordered_columns]
+            log_df['dot_positions'] = log_df['dot_positions'].where(log_df['event_type'] == 'stimulus', '')
+        preferred_front_columns = [
+            'unix_timestamp',
+            'trial_nr',
+            'onset',
+            'range',
+            'block_index',
+            'event_type',
+            'phase',
+            'stimulus_format',
+            'n',
+            'response',
+            'response_time',
+            'start_marker_position',
+            'total_reward',
+            'onset_abs',
+            'duration',
+            'nr_frames',
+            'jitter',
+        ]
+        preferred_end_columns = ['dot_positions']
+        front_columns = [column for column in preferred_front_columns if column in log_df.columns]
+        end_columns = [column for column in preferred_end_columns if column in log_df.columns]
+        middle_columns = [
+            column for column in log_df.columns
+            if column not in front_columns and column not in end_columns
+        ]
+        log_df = log_df[front_columns + middle_columns + end_columns]
         self.global_log = log_df
         self.global_log.to_csv(op.join(self.output_dir, self.output_str + "_events.tsv"), sep="\t", index=False)
         self.global_log.to_csv(op.join(self.output_dir, "session.log"), sep="\t", index=False)
