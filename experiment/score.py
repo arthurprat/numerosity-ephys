@@ -18,17 +18,22 @@ def get_score_rows(log_df, feedback_phase=None):
 
 
 def get_subject_stats(subject, session, log_dir, max_reward=.1, reward_slope=.025, no_response_penalty=0.1):
-    feedback_log_files = glob.glob(op.join(log_dir, f'sub-{subject}', f'ses-{session}', 'task-feedback_run-*', 'session_events.tsv'))
-    estimation_log_files = glob.glob(op.join(log_dir, f'sub-{subject}', f'ses-{session}', 'task-estimation_task_run-*', 'session_events.tsv'))
-    print(op.join(log_dir, f'sub-{subject}', f'ses-{session}', 'task-feedback_run-*', 'session_events.tsv'))
+    # Previous layout expected one subfolder per task/run:
+    # feedback_log_files = glob.glob(op.join(log_dir, f'sub-{subject}', f'ses-{session}', 'task-feedback_run-*', 'session_events.tsv'))
+    # estimation_log_files = glob.glob(op.join(log_dir, f'sub-{subject}', f'ses-{session}', 'task-estimation_task_run-*', 'session_events.tsv'))
+    # print(op.join(log_dir, f'sub-{subject}', f'ses-{session}', 'task-feedback_run-*', 'session_events.tsv'))
+    feedback_log_files = glob.glob(op.join(log_dir, f'sub-{subject}', f'ses-{session}', 'session_events.tsv'))
+    estimation_log_files = glob.glob(op.join(log_dir, f'sub-{subject}', f'ses-{session}', 'session_events.tsv'))
+    print(op.join(log_dir, f'sub-{subject}', f'ses-{session}', 'session_events.tsv'))
 
-    reg = re.compile(r'task-(?P<task>[a-zA-Z_]+)_run-(?P<run>[0-9]+)')
+    # reg = re.compile(r'task-(?P<task>[a-zA-Z_]+)_run-(?P<run>[0-9]+)')
+    reg = None
 
     stats = {}
 
     feedback_df = []
     for fn in feedback_log_files:
-        run = reg.match(Path(fn).parent.name).group('run')
+        run = reg.match(Path(fn).parent.name).group('run') if reg is not None else '1'
         d = pd.read_csv(fn, sep='\t')
         d['run'] = run
         feedback_df.append(d)
@@ -48,7 +53,7 @@ def get_subject_stats(subject, session, log_dir, max_reward=.1, reward_slope=.02
     estimation_df = []
 
     for fn in estimation_log_files:
-        run = reg.match(Path(fn).parent.name).group('run')
+        run = reg.match(Path(fn).parent.name).group('run') if reg is not None else '1'
         d = pd.read_csv(fn, sep='\t')
         d['run'] = run
         estimation_df.append(d)

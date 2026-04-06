@@ -58,10 +58,13 @@ def get_output_dir_str(subject, session, task, run):
 
     if session:
         output_dir = op.join(output_dir, f'ses-{session}')
-    task_dir = f'task-{task}'
-    if run:
-        task_dir += f'_run-{run}'
-    output_dir = op.join(output_dir, task_dir)
+
+    # Previous layout kept one extra folder level per task/run:
+    # task_dir = f'task-{task}'
+    # if run:
+    #     task_dir += f'_run-{run}'
+    # output_dir = op.join(output_dir, task_dir)
+
     output_str = 'session'
 
     return output_dir, output_str
