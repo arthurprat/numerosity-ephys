@@ -86,7 +86,8 @@ class OneRangeSession(EstimationSession):
                     jitter=0,
                     n=n,
                     stimulus_series=self.settings['cloud']['stimulus_series'],
-                    stimulus_format=stimulus_format
+                    stimulus_format=stimulus_format,
+                    block_index=(i // trials_per_block) + 1
                 )
                 for i, (n, stimulus_format) in enumerate(zip(ns, stimulus_formats))
             ]
@@ -103,7 +104,8 @@ class OneRangeSession(EstimationSession):
                     jitter=jitter,
                     n=n,
                     stimulus_series=self.settings['cloud']['stimulus_series'],
-                    stimulus_format=stimulus_format
+                    stimulus_format=stimulus_format,
+                    block_index=(i // trials_per_block) + 1
                 )
                 for i, (n, jitter, stimulus_format) in enumerate(zip(ns, isis, stimulus_formats))
             ]

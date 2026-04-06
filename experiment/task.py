@@ -16,7 +16,9 @@ class TaskTrial(Trial):
                 jitter=1,
                 stimulus_series=False,
                 n=15,
-                stimulus_format='dots', **kwargs):
+                stimulus_format='dots',
+                block_index=None,
+                **kwargs):
 
         if phase_durations is None:
             if stimulus_series:
@@ -68,6 +70,7 @@ class TaskTrial(Trial):
         self.parameters['n'] = n
         self.parameters['jitter'] = jitter
         self.parameters['stimulus_format'] = stimulus_format
+        self.parameters['block_index'] = block_index
         if stimulus_format == 'numeral':
             self.stimulus = TextStim(
                 self.session.win,

@@ -46,16 +46,16 @@ score_total_summary:
 score_block_summary:
   "Block {current_block}/{total_blocks} complete.\n\n
   Nice work.\n\n
-  On average your estimates were off by just {mean_abs_error:.2f}.\n\n
-  Current score: {total_reward:.2f} points."
+  In this block, on average your estimates were off by just {mean_abs_error:.2f}.\n\n
+  Block score: {total_reward:.2f} points."
 
 score_block_summary_empty:
   "Block {current_block}/{total_blocks} complete.\n\n
   Nice work.\n\n
-  On average you were off by just 0.00.\n\n
-  Current score: 0.00 points."
+  In this block, on average you were off by just 0.00.\n\n
+  Block score: 0.00 points."
 
 score_final_summary:
   "Thank you!\n\n
-  On average your estimates were off by just {mean_abs_error:.2f}.\n\n
+  In the whole session, on average your estimates were off by just {mean_abs_error:.2f}.\n\n
   You earned {total_reward:.2f} points."

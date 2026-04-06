@@ -10,10 +10,12 @@ from utils import get_output_dir_str, get_settings
 from exptools2.core import PylinkEyetrackerSession, Trial
 
 
-def get_score_rows(log_df, feedback_phase=None):
+def get_score_rows(log_df, feedback_phase=None, block_index=None):
     score_rows = log_df.set_index(['trial_nr', 'event_type']).xs('feedback', level='event_type').astype({'n': float, 'response': float})
     if feedback_phase is not None:
         score_rows = score_rows[score_rows['phase'] == feedback_phase]
+    if block_index is not None and 'block_index' in score_rows.columns:
+        score_rows = score_rows[score_rows['block_index'] == block_index]
     return score_rows
 
 
@@ -143,7 +145,7 @@ class ScoreTrial(InstructionTrial):
 
     def get_score(self):
         self.log = self.session.global_log.copy()
-        self.log = get_score_rows(self.log, feedback_phase=self.feedback_phase)
+        self.log = get_score_rows(self.log, feedback_phase=self.feedback_phase, block_index=self.block_index)
 
         if self.log.empty:
             if self.block_index is not None and self.total_blocks is not None:
